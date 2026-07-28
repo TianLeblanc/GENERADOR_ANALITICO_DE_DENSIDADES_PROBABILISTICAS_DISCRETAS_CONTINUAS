@@ -189,12 +189,55 @@ if st.sidebar.button("🚀 Generar y Evaluar", type="primary"):
         st.markdown("### Gráfica Teórica de la Distribución")
         fig_teo = go.Figure()
 
-        if "Continua U" in tipo_distribucion:
-            # (Lógica existente para uniforme continua)
-            pass
-        elif "Discreta" in tipo_distribucion:
-            # (Lógica existente para uniforme discreta)
-            pass
+        if "Uniforme Continua" in tipo_distribucion:
+            b_menos_a = max_val - min_val if max_val != min_val else 1.0
+            altura = 1.0 / b_menos_a
+
+            # Curva de densidad con grosor superior y diseño estilizado
+            fig_teo.add_trace(go.Scatter(
+                x=[min_val, max_val],
+                y=[altura, altura],
+                mode='lines',
+                name=f'Densidad f(x)',
+                line=dict(color='#60A5FA', width=5)
+            ))
+            # Relleno inferior con degradado visual estético
+            fig_teo.add_trace(go.Scatter(
+                x=[min_val, min_val, max_val, max_val],
+                y=[0, altura, altura, 0],
+                fill='toself',
+                fillcolor='rgba(96, 165, 250, 0.15)',
+                mode='lines',
+                line=dict(color='rgba(255,255,255,0)'),
+                showlegend=False
+            ))
+            fig_teo.update_layout(
+                xaxis_title="Intervalo [a, b]",
+                yaxis_title="Densidad de Probabilidad f(x)",
+                template=template_grafico,
+                yaxis=dict(range=[0, altura * 1.4], zeroline=True, zerolinecolor='#374151')
+            )
+        elif "Uniforme Discreta" in tipo_distribucion:
+            valores_unicos = list(range(int(min_d), int(max_d) + 1))
+            prob_teorica_val = 1.0 / len(valores_unicos)
+            y_vals = [prob_teorica_val] * len(valores_unicos)
+
+            fig_teo.add_trace(go.Bar(
+                x=valores_unicos,
+                y=y_vals,
+                marker_color='#3B82F6',
+                marker_line_color='#93C5FD',
+                marker_line_width=2,
+                opacity=0.9,
+                name='P(X = x)'
+            ))
+            fig_teo.update_layout(
+                xaxis_title="Valores Enteros Discretos",
+                yaxis_title="Probabilidad P(x)",
+                template=template_grafico,
+                bargap=0.25
+            )
+
         else:
             # Curva Teórica Normal N(μ, σ²)
             x_vals = np.linspace(media_norm - 4 * desv_norm, media_norm + 4 * desv_norm, 200)
@@ -213,6 +256,12 @@ if st.sidebar.button("🚀 Generar y Evaluar", type="primary"):
                 template=template_grafico
             )
 
+        fig_teo.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            xaxis=dict(showgrid=True, gridcolor='#1F2937'),
+            yaxis=dict(showgrid=True, gridcolor='#1F2937')
+        )
         st.plotly_chart(fig_teo, use_container_width=True)
 
     with tab2:
