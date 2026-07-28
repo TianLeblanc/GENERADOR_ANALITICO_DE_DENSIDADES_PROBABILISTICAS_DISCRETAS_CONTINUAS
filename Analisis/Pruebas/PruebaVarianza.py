@@ -43,7 +43,7 @@ class PruebaVarianza(PruebaInterfaz):
         return ResultadoPruebaDTO(
             nombre_prueba=self._nombre,
             valor_calculado=round(estadistico_chi, 4),
-            # Enviamos ambos límites formateados como referencia visual clara
+            valor_crudo=round(varianza_muestra, 4),
             valor_critico_tabla=f"[{round(chi_inferior, 2)}, {round(chi_superior, 2)}]",
             pasa_validacion=pasa_validacion
         )

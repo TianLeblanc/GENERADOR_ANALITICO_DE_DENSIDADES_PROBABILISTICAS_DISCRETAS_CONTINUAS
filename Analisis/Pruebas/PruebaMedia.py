@@ -36,5 +36,6 @@ class PruebaMedia(PruebaInterfaz):
             nombre_prueba=self._nombre,
             valor_calculado=round(valor_z, 4),
             valor_critico_tabla=self._z_critico,
+            valor_crudo=round(media_muestra,4),
             pasa_validacion=pasa_validacion
         )

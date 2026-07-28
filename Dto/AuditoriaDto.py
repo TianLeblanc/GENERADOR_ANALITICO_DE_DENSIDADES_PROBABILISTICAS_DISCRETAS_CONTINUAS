@@ -12,8 +12,9 @@ class CongruencialDto:
 class ResultadoPruebaDTO:
     nombre_prueba: str
     valor_calculado: float
-    valor_critico_tabla: float
+    valor_critico_tabla: float | str
     pasa_validacion: bool
+    valor_crudo: float | None = None
 
 @dataclass(frozen=True)
 class DatosGraficaKSDTO:
