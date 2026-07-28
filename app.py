@@ -102,10 +102,46 @@ if st.sidebar.button("🚀 Generar y Evaluar", type="primary"):
     st.success("¡Pruebas ejecutadas con éxito!")
     col1, col2, col3, col4 = st.columns(4)
 
+
     def render_metric_card(col, prueba, prefijo):
         estado = "✅ PASÓ" if prueba.pasa_validacion else "❌ FALLÓ"
-        val = f"{prefijo} {prueba.valor_calculado}" if isinstance(prueba.valor_calculado, (int, float)) else prueba.valor_calculado
-        col.metric(label=f"{prueba.nombre_prueba} ({estado})", value=val, delta=f"Crítico: {prueba.valor_critico_tabla}")
+        val = f"{prefijo} {prueba.valor_calculado}" if isinstance(prueba.valor_calculado,
+                                                                  (int, float)) else prueba.valor_calculado
+
+        # Preparamos el texto del valor crudo o intervalo si existe
+        extra_html = ""
+        if hasattr(prueba, "valor_crudo") and prueba.valor_crudo is not None:
+            if "Media" in prueba.nombre_prueba:
+                extra_html = f"<br><span style='font-size: 0.8em; color: #9CA3AF;'>Media Real: {prueba.valor_crudo}</span>"
+            elif "Varianza" in prueba.nombre_prueba:
+                extra_html = f"<br><span style='font-size: 0.8em; color: #9CA3AF;'>Var Real: {prueba.valor_crudo}</span>"
+
+        # Renderizamos con altura fija (height) y diseño flexbox para alinear todo perfecto
+        col.markdown(f"""
+            <div style="
+                background-color: #1F2937;
+                padding: 16px;
+                border-radius: 12px;
+                border: 1px solid #374151;
+                margin-bottom: 10px;
+                height: 175px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            ">
+                <div>
+                    <div style="font-size: 0.85em; color: #D1D5DB; font-weight: 600; margin-bottom: 6px;">
+                        {prueba.nombre_prueba} ({estado})
+                    </div>
+                    <div style="font-size: 1.6em; font-weight: bold; color: #FFFFFF; line-height: 1.2;">
+                        {val}
+                    </div>
+                </div>
+                <div style="font-size: 0.85em; color: #9CA3AF; border-top: 1px solid #374151; pt: 4px; margin-top: 4px;">
+                    Crítico: {prueba.valor_critico_tabla}{extra_html}
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
 
     render_metric_card(col1, reporte.prueba_media, "Z =")
     render_metric_card(col2, reporte.prueba_varianza, "Chi² =")
