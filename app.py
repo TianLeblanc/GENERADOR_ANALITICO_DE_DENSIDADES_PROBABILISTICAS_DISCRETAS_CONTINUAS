@@ -14,7 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Estilos CSS personalizados para eliminar el fondo blanco plano y dar un toque moderno
+# Estilos CSS personalizados para un diseño oscuro moderno y elegante
 st.markdown("""
     <style>
     .stApp {
@@ -47,7 +47,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("📊 Analizador Estadístico: Distribuciones Uniformes")
-st.markdown("Generación estocástica y validación analítica con un entorno visual moderno.")
+st.markdown("Generación estocástica, validación analítica y gráficas teóricas de densidad y probabilidad.")
 
 # --- BARRA LATERAL DE CONFIGURACIÓN ---
 st.sidebar.header("⚙️ Configuración del Experimento")
@@ -90,7 +90,7 @@ if st.sidebar.button("🚀 Generar y Evaluar", type="primary"):
         amplitud = float((max_d - min_d) + 1)
         datos_para_pruebas = [(x - min_d) / amplitud for x in datos_visibles]
 
-    # 2. Ejecución de tu Analizador Estadistico
+    # 2. Ejecución de tu Analizador Estadístico
     analizador = AnalizadorEstadistico(nivel_confianza=nivel_confianza)
     reporte = analizador.evaluar_generador(
         numeros=datos_para_pruebas,
@@ -114,20 +114,42 @@ if st.sidebar.button("🚀 Generar y Evaluar", type="primary"):
 
     st.markdown("---")
 
-    # --- SECCIÓN VISUAL CON 3 GRÁFICAS CLAVE EN PESTAÑAS MODERNAS ---
-    st.subheader("📈 Tablero de Gráficas Analíticas")
+    # --- TABLERO DE GRÁFICAS ANALÍTICAS (AHORA CON 4 PESTAÑAS) ---
+    st.subheader("📈 Tablero de Gráficas Analíticas y de Validación")
     
-    tab1, tab2, tab3 = st.tabs([
-        "📊 1. Histograma de Frecuencias", 
-        "🔄 2. Prueba de Independencia (Serial)", 
-        "📈 3. Kolmogorov-Smirnov (Acumulada)"
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📉 1. Distribución Teórica", 
+        "📊 2. Histograma de Frecuencias", 
+        "🔄 3. Prueba de Independencia (Serial)", 
+        "📈 4. Kolmogorov-Smirnov (Acumulada)"
     ])
 
-    # Aplicamos un template oscuro a las gráficas para que combinen con la interfaz
     template_grafico = "plotly_dark"
 
     with tab1:
-        st.markdown("### Distribución de Frecuencias")
+        st.markdown("### Gráfica Teórica de la Distribución")
+        fig_teo = go.Figure()
+        if "Continua" in tipo_distribucion:
+            # Función de Densidad Uniforme Continua f(x) = 1 / (b - a)
+            b_menos_a = max_val - min_val if max_val != min_val else 1.0
+            altura = 1.0 / b_menos_a
+            x_vals = [min_val, max_val]
+            y_vals = [altura, altura]
+            fig_teo.add_trace(go.Scatter(x=x_vals, y=y_vals, mode='lines', name=f'U({min_val}, {max_val})', line=dict(color='#3B82F6', width=4)))
+            fig_teo.update_layout(xaxis_title="X", yaxis_title="Densidad f(x)", template=template_grafico)
+        else:
+            # Función de Probabilidad Uniforme Discreta
+            valores_unicos = list(range(int(min_d), int(max_d) + 1))
+            prob_teorica_val = 1.0 / len(valores_unicos)
+            y_vals = [prob_teorica_val] * len(valores_unicos)
+            fig_teo.add_trace(go.Bar(x=valores_unicos, y=y_vals, marker_color='#3B82F6', name='Probabilidad P(X=x)'))
+            fig_teo.update_layout(xaxis_title="Valores Enteros", yaxis_title="Probabilidad", template=template_grafico)
+
+        fig_teo.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig_teo, use_container_width=True)
+
+    with tab2:
+        st.markdown("### Histograma de Frecuencias de la Muestra")
         if "Continua" in tipo_distribucion:
             fig_hist = px.histogram(x=list(datos_visibles), nbins=20, labels={'x': 'Intervalos (U_i)', 'y': 'Frecuencia'}, template=template_grafico)
         else:
@@ -136,7 +158,7 @@ if st.sidebar.button("🚀 Generar y Evaluar", type="primary"):
         fig_hist.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', bargap=0.1)
         st.plotly_chart(fig_hist, use_container_width=True)
 
-    with tab2:
+    with tab3:
         st.markdown("### Gráfica de Dispersión $U_i$ vs $U_{i+1}$ (Independencia)")
         if len(datos_visibles) > 1:
             ui = list(datos_visibles[:-1])
@@ -148,7 +170,7 @@ if st.sidebar.button("🚀 Generar y Evaluar", type="primary"):
         else:
             st.warning("Se requieren más datos para graficar la dispersión.")
 
-    with tab3:
+    with tab4:
         st.markdown("### Ajuste de Probabilidad Acumulada (Kolmogorov-Smirnov)")
         datos_vis = reporte.visuales_ks if hasattr(reporte, 'visuales_ks') else reporte.datos_visuales_ks
         if datos_vis and len(datos_vis.numeros_ordenados) > 0:
