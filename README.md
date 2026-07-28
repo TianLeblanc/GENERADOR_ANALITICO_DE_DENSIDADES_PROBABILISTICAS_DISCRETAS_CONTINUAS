@@ -31,8 +31,8 @@ Sigue estos pasos para clonar y poner en marcha el proyecto en tu entorno local:
 
 ### 1. Clonar el repositorio
 ```bash
-git clone <https://github.com/TianLeblanc/GENERADOR_ANALITICO_DE_DENSIDADES_PROBABILISTICAS_DISCRETAS_CONTINUAS.git>
-cd <GENERADOR_ANALITICO_DE_DENSIDADES_PROBABILISTICAS_DISCRETAS_CONTINUAS>
+git clone https://github.com/TianLeblanc/GENERADOR_ANALITICO_DE_DENSIDADES_PROBABILISTICAS_DISCRETAS_CONTINUAS.git
+cd GENERADOR_ANALITICO_DE_DENSIDADES_PROBABILISTICAS_DISCRETAS_CONTINUAS
 ```
 
 ---
