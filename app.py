@@ -114,7 +114,7 @@ if st.sidebar.button("🚀 Generar y Evaluar", type="primary"):
 
     st.markdown("---")
 
-    # --- TABLERO DE GRÁFICAS ANALÍTICAS (AHORA CON 4 PESTAÑAS) ---
+    # --- TABLERO DE GRÁFICAS ANALÍTICAS Y DE VALIDACIÓN ---
     st.subheader("📈 Tablero de Gráficas Analíticas y de Validación")
     
     tab1, tab2, tab3, tab4 = st.tabs([
@@ -129,23 +129,62 @@ if st.sidebar.button("🚀 Generar y Evaluar", type="primary"):
     with tab1:
         st.markdown("### Gráfica Teórica de la Distribución")
         fig_teo = go.Figure()
+        
         if "Continua" in tipo_distribucion:
-            # Función de Densidad Uniforme Continua f(x) = 1 / (b - a)
             b_menos_a = max_val - min_val if max_val != min_val else 1.0
             altura = 1.0 / b_menos_a
-            x_vals = [min_val, max_val]
-            y_vals = [altura, altura]
-            fig_teo.add_trace(go.Scatter(x=x_vals, y=y_vals, mode='lines', name=f'U({min_val}, {max_val})', line=dict(color='#3B82F6', width=4)))
-            fig_teo.update_layout(xaxis_title="X", yaxis_title="Densidad f(x)", template=template_grafico)
+            
+            # Curva de densidad con grosor superior y diseño estilizado
+            fig_teo.add_trace(go.Scatter(
+                x=[min_val, max_val], 
+                y=[altura, altura], 
+                mode='lines', 
+                name=f'Densidad f(x)', 
+                line=dict(color='#60A5FA', width=5)
+            ))
+            # Relleno inferior con degradado visual estético
+            fig_teo.add_trace(go.Scatter(
+                x=[min_val, min_val, max_val, max_val], 
+                y=[0, altura, altura, 0], 
+                fill='toself', 
+                fillcolor='rgba(96, 165, 250, 0.15)', 
+                mode='lines', 
+                line=dict(color='rgba(255,255,255,0)'),
+                showlegend=False
+            ))
+            fig_teo.update_layout(
+                xaxis_title="Intervalo [a, b]", 
+                yaxis_title="Densidad de Probabilidad f(x)", 
+                template=template_grafico,
+                yaxis=dict(range=[0, altura * 1.4], zeroline=True, zerolinecolor='#374151')
+            )
         else:
-            # Función de Probabilidad Uniforme Discreta
             valores_unicos = list(range(int(min_d), int(max_d) + 1))
             prob_teorica_val = 1.0 / len(valores_unicos)
             y_vals = [prob_teorica_val] * len(valores_unicos)
-            fig_teo.add_trace(go.Bar(x=valores_unicos, y=y_vals, marker_color='#3B82F6', name='Probabilidad P(X=x)'))
-            fig_teo.update_layout(xaxis_title="Valores Enteros", yaxis_title="Probabilidad", template=template_grafico)
+            
+            fig_teo.add_trace(go.Bar(
+                x=valores_unicos, 
+                y=y_vals, 
+                marker_color='#3B82F6', 
+                marker_line_color='#93C5FD',
+                marker_line_width=2,
+                opacity=0.9,
+                name='P(X = x)'
+            ))
+            fig_teo.update_layout(
+                xaxis_title="Valores Enteros Discretos", 
+                yaxis_title="Probabilidad P(x)", 
+                template=template_grafico,
+                bargap=0.25
+            )
 
-        fig_teo.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+        fig_teo.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)', 
+            paper_bgcolor='rgba(0,0,0,0)',
+            xaxis=dict(showgrid=True, gridcolor='#1F2937'),
+            yaxis=dict(showgrid=True, gridcolor='#1F2937')
+        )
         st.plotly_chart(fig_teo, use_container_width=True)
 
     with tab2:
@@ -155,6 +194,7 @@ if st.sidebar.button("🚀 Generar y Evaluar", type="primary"):
         else:
             fig_hist = px.histogram(x=list(datos_visibles), nbins=int((max_d - min_d) + 1), labels={'x': 'Valores Enteros', 'y': 'Frecuencia'}, template=template_grafico)
         
+        fig_hist.update_traces(marker_color='#10B981', marker_line_color='#34D399', marker_line_width=1)
         fig_hist.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', bargap=0.1)
         st.plotly_chart(fig_hist, use_container_width=True)
 
@@ -164,7 +204,7 @@ if st.sidebar.button("🚀 Generar y Evaluar", type="primary"):
             ui = list(datos_visibles[:-1])
             ui_1 = list(datos_visibles[1:])
             fig_disp = px.scatter(x=ui, y=ui_1, labels={'x': 'U_i', 'y': 'U_{i+1}'}, template=template_grafico)
-            fig_disp.update_traces(marker=dict(size=8, color='#3B82F6', opacity=0.8))
+            fig_disp.update_traces(marker=dict(size=8, color='#8B5CF6', opacity=0.7))
             fig_disp.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig_disp, use_container_width=True)
         else:
