@@ -75,22 +75,29 @@ else:
 
 # --- BOTÓN DE EJECUCIÓN ---
 if st.sidebar.button("🚀 Generar y Evaluar", type="primary"):
-    
-    # 1. Generación de datos puros convertidos estrictamente a listas de Python nativas
+
+    # 1. Generación de datos puros según el tipo de distribución
     if "Continua" in tipo_distribucion:
+        # Generamos los datos en la escala real [min_val, max_val]
         datos_brutos = GeneradorUniforme.generar_continua(int(cantidad), float(min_val), float(max_val))
+        datos_visibles = [float(x) for x in datos_brutos]
+
+        # EL PUENTE DE NORMALIZACIÓN:
+        # Si el rango no es (0, 1), normalizamos los datos a [0, 1) para que tus clases de prueba (que esperan U(0,1)) funcionen perfecto
         if max_val != min_val:
             datos_para_pruebas = [(x - min_val) / (max_val - min_val) for x in datos_brutos]
         else:
             datos_para_pruebas = datos_brutos
-        datos_visibles = [float(x) for x in datos_brutos]
+
     else:
         datos_enteros = GeneradorUniforme.generar_discreta(int(cantidad), int(min_d), int(max_d))
         datos_visibles = [float(x) for x in datos_enteros]
+
+        # Para la discreta también normalizamos usando su amplitud para llevarlos a [0, 1)
         amplitud = float((max_d - min_d) + 1)
         datos_para_pruebas = [(x - min_d) / amplitud for x in datos_visibles]
 
-    # 2. Ejecución de tu Analizador Estadístico
+    # 2. Ejecución de tu Analizador Estadístico usando los datos normalizados
     analizador = AnalizadorEstadistico(nivel_confianza=nivel_confianza)
     reporte = analizador.evaluar_generador(
         numeros=datos_para_pruebas,
@@ -112,9 +119,11 @@ if st.sidebar.button("🚀 Generar y Evaluar", type="primary"):
         extra_html = ""
         if hasattr(prueba, "valor_crudo") and prueba.valor_crudo is not None:
             if "Media" in prueba.nombre_prueba:
-                extra_html = f"<br><span style='font-size: 0.8em; color: #9CA3AF;'>Media Real: {prueba.valor_crudo}</span>"
+                media_escala_real = (prueba.valor_crudo * (max_val - min_val)) + min_val
+                extra_html = f"<br><span style='font-size: 0.8em; color: #9CA3AF;'>Media Real: {media_escala_real}</span>"
             elif "Varianza" in prueba.nombre_prueba:
-                extra_html = f"<br><span style='font-size: 0.8em; color: #9CA3AF;'>Var Real: {prueba.valor_crudo}</span>"
+                var_escala_real = prueba.valor_crudo * ((max_val - min_val) ** 2)
+                extra_html = f"<br><span style='font-size: 0.8em; color: #9CA3AF;'>Var Real: {var_escala_real}</span>"
 
         # Renderizamos con altura fija (height) y diseño flexbox para alinear todo perfecto
         col.markdown(f"""
