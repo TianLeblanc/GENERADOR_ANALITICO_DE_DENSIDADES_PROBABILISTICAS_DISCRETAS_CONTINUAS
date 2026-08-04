@@ -10,7 +10,6 @@ class PruebaIndependencia(PruebaInterfaz):
         self._nombre = "Prueba de Independencia (Rachas)"
         self._nivel_confianza = nivel_confianza
         
-        # CÁLCULO DINÁMICO DE Z CRÍTICO
         alfa = 1.0 - nivel_confianza
         self._z_critico = round(norm.ppf(1.0 - alfa / 2.0), 4)
 
@@ -25,8 +24,12 @@ class PruebaIndependencia(PruebaInterfaz):
                 pasa_validacion=False
             )
 
-        # 1. Secuencia de binarios
-        signos = [x >= 0.5 for x in numeros]
+        # Usamos la mediana de los datos como umbral dinámico para evitar que todos caigan del mismo lado
+        temp_sort = sorted(numeros)
+        mediana = temp_sort[n // 2]
+
+        # 1. Secuencia de binarios basados en la mediana
+        signos = [x >= mediana for x in numeros]
 
         # 2. Contar rachas (b)
         rachas = 1
@@ -41,7 +44,7 @@ class PruebaIndependencia(PruebaInterfaz):
         if n1 == 0 or n2 == 0:
             return ResultadoPruebaDTO(
                 nombre_prueba=self._nombre,
-                valor_calculado=float('inf'),
+                valor_calculado=0.0,
                 valor_critico_tabla=self._z_critico,
                 pasa_validacion=False
             )
@@ -50,7 +53,11 @@ class PruebaIndependencia(PruebaInterfaz):
         media_rachas = ((2 * n1 * n2) / n) + 0.5
         numerador_var = 2 * n1 * n2 * (2 * n1 * n2 - n)
         denominador_var = (n ** 2) * (n - 1)
-        varianza_rachas = numerador_var / denominador_var
+        
+        if denominador_var == 0:
+            varianza_rachas = 0.0
+        else:
+            varianza_rachas = numerador_var / denominador_var
 
         if varianza_rachas <= 0:
             return ResultadoPruebaDTO(

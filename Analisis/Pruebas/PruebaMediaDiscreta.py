@@ -16,7 +16,10 @@ class PruebaMediaDiscreta(PruebaInterfaz):
         self._z_critico = round(norm.ppf(1.0 - alfa / 2.0), 4)
 
     def ejecutar(self, numeros: list[float]) -> ResultadoPruebaDTO:
-        n = len(numeros)
+        # Convertimos forzosamente a enteros para evitar desajustes en las sumatorias
+        nums_enteros = [int(x) for x in numeros]
+        n = len(nums_enteros)
+        
         if n == 0:
             return ResultadoPruebaDTO(
                 nombre_prueba=self._nombre,
@@ -25,9 +28,8 @@ class PruebaMediaDiscreta(PruebaInterfaz):
                 pasa_validacion=False
             )
 
-        media_muestra = sum(numeros) / n
+        media_muestra = sum(nums_enteros) / n
         
-        # Varianza teórica discreta: ((b - a + 1)^2 - 1) / 12
         a, b = self._min_val, self._max_val
         varianza_teorica = (((b - a + 1) ** 2) - 1) / 12.0
         error_estandar = math.sqrt(varianza_teorica / n)

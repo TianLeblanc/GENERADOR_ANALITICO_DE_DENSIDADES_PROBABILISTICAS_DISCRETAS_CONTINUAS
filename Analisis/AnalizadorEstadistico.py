@@ -1,33 +1,20 @@
 from Dto.AuditoriaDto import ReporteAuditoriaDTO, MetadatosGeneradorDTO, DatosGraficaKSDTO
-from Analisis.Pruebas.PruebaMedia import PruebaMedia
-from Analisis.Pruebas.PruebaVarianza import PruebaVarianza
-from Analisis.Pruebas.PruebaKS import PruebaKS
+from Analisis.Pruebas.PruebaChiCuadrada import PruebaChiCuadrada
 from Analisis.Pruebas.PruebaIndependencia import PruebaIndependencia
-
-# Importamos las nuevas pruebas normales
-from Analisis.Pruebas.PruebaMediaNormal import PruebaMediaNormal
-from Analisis.Pruebas.PruebaVarianzaNormal import PruebaVarianzaNormal
-from Analisis.Pruebas.PruebaKSNormal import PruebaKSNormal
-
+from Analisis.Pruebas.PruebaMediaDiscreta import PruebaMediaDiscreta
+from Analisis.Pruebas.PruebaVarianzaDiscreta import PruebaVarianzaDiscreta
 
 class AnalizadorEstadistico:
 
-    def __init__(self, nivel_confianza: float = 0.95, es_normal: bool = False, media: float = 0.0, desviacion: float = 1.0):
+    def __init__(self, nivel_confianza: float = 0.95, min_d: int = 1, max_d: int = 10, **kwargs):
         self._nivel_confianza = nivel_confianza
-        self._es_normal = es_normal
-
-        if self._es_normal:
-            # Si es normal, usamos las pruebas con los parámetros teóricos μ y σ
-            self._prueba_media = PruebaMediaNormal(media, desviacion, nivel_confianza)
-            self._prueba_varianza = PruebaVarianzaNormal(desviacion, nivel_confianza)
-            self._prueba_ks = PruebaKSNormal(media, desviacion, nivel_confianza)
-        else:
-            # Si es uniforme por defecto [0, 1]
-            self._prueba_media = PruebaMedia(nivel_confianza)
-            self._prueba_varianza = PruebaVarianza(nivel_confianza)
-            self._prueba_ks = PruebaKS(nivel_confianza)
-
-        # La prueba de rachas/independencia se mantiene para evaluar la secuencia
+        self._min_d = min_d
+        self._max_d = max_d
+        
+        # Pruebas estadísticas discretas oficiales
+        self._prueba_media = PruebaMediaDiscreta(min_d, max_d, nivel_confianza)
+        self._prueba_varianza = PruebaVarianzaDiscreta(min_d, max_d, nivel_confianza)
+        self._prueba_chi = PruebaChiCuadrada(min_d, max_d, nivel_confianza)
         self._prueba_independencia = PruebaIndependencia(nivel_confianza)
 
     def evaluar_generador(self, numeros: list[float], nombre_generador: str, parametros: dict) -> ReporteAuditoriaDTO:
@@ -36,28 +23,30 @@ class AnalizadorEstadistico:
             parametros=parametros
         )
 
-        # 2. Ejecutar cada una de las pruebas matemáticas
+        # Ejecución de pruebas con los valores enteros originales
         res_media = self._prueba_media.ejecutar(numeros)
         res_varianza = self._prueba_varianza.ejecutar(numeros)
-        res_ks = self._prueba_ks.ejecutar(numeros)
-        res_independencia = self._prueba_independencia.ejecutar(numeros)
+        res_chi = self._prueba_chi.ejecutar(numeros)
 
-        # 3. Extraer el memento visual para la gráfica K-S
-        datos_visuales = self._prueba_ks.ultimos_datos_grafica
-        if datos_visuales is None:
-            datos_visuales = DatosGraficaKSDTO(
-                numeros_ordenados=[],
-                probabilidad_teorica=[],
-                probabilidad_real=[]
-            )
+        # Normalización para la prueba de rachas (independencia)
+        rango = self._max_d - self._min_d
+        if rango == 0:
+            rango = 1.0
+        numeros_normalizados = [min(max((x - self._min_d) / (rango + 1.0), 0.0), 0.999999) for x in numeros]
+        res_independencia = self._prueba_independencia.ejecutar(numeros_normalizados)
 
-        # 4. Construir y regresar el reporte completo
+        datos_visuales = DatosGraficaKSDTO(
+            numeros_ordenados=[],
+            probabilidad_teorica=[],
+            probabilidad_real=[]
+        )
+
         return ReporteAuditoriaDTO(
             metadatos=metadatos,
             numeros_generados=numeros,
-            prueba_media=res_media,
-            prueba_varianza=res_varianza,
-            prueba_ks=res_ks,
-            datos_visuales_ks=datos_visuales,
-            prueba_independencia=res_independencia
+            resultado_media=res_media,
+            resultado_varianza=res_varianza,
+            resultado_ks=res_chi,  # Reemplazamos K-S por Chi-cuadrada en el reporte estándar
+            resultado_independencia=res_independencia,
+            visuales_ks=datos_visuales
         )

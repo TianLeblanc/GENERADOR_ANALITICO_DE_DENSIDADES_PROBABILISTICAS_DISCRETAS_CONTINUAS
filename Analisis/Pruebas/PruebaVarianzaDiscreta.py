@@ -11,7 +11,10 @@ class PruebaVarianzaDiscreta(PruebaInterfaz):
         self._varianza_teorica = (((b - a + 1) ** 2) - 1) / 12.0
 
     def ejecutar(self, numeros: list[float]) -> ResultadoPruebaDTO:
-        n = len(numeros)
+        # Convertimos forzosamente a enteros
+        nums_enteros = [int(x) for x in numeros]
+        n = len(nums_enteros)
+        
         if n <= 1 or self._varianza_teorica <= 0:
             return ResultadoPruebaDTO(
                 nombre_prueba=self._nombre,
@@ -20,8 +23,8 @@ class PruebaVarianzaDiscreta(PruebaInterfaz):
                 pasa_validacion=False
             )
 
-        media = sum(numeros) / n
-        suma_cuadrados = sum((x - media) ** 2 for x in numeros)
+        media = sum(nums_enteros) / n
+        suma_cuadrados = sum((x - media) ** 2 for x in nums_enteros)
         varianza_muestra = suma_cuadrados / (n - 1)
 
         estadistico_chi = ((n - 1) * varianza_muestra) / self._varianza_teorica
